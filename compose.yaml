@@ -1,0 +1,20 @@
+services:
+  app:
+    image: ghcr.io/gabe565/unbound-cache
+    build: .
+    ports:
+      - 127.0.0.1:53:53/tcp
+      - 127.0.0.1:53:53/udp
+    volumes:
+      - ./data/unbound.conf:/opt/unbound/etc/unbound/unbound.conf
+      - ./data/data:/opt/unbound/data
+    develop:
+      watch:
+        - action: rebuild
+          path: /go.*
+        - action: rebuild
+          path: ./main.go
+        - action: rebuild
+          path: ./cmd
+        - action: rebuild
+          path: ./internal
