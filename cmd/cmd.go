@@ -41,6 +41,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Runs Unbound
 	group.Go(func() error {
 		if err := unbound.Run(ctx); !errors.Is(err, context.Canceled) {
 			return err
@@ -48,6 +49,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		return nil
 	})
 
+	// Loads previous cacheduring startup
 	var loaded bool
 	group.Go(func() error {
 		subCtx, subCancel := context.WithTimeout(ctx, 10*time.Minute)
@@ -62,6 +64,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		return nil
 	})
 
+	// Dumps cache before exit
 	group.Go(func() error {
 		defer cancel()
 		signalCtx, cancelSignal := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
@@ -80,6 +83,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 	})
 
+	// Regularly dumps cache
 	group.Go(func() error {
 		ticker := time.NewTicker(conf.DumpEvery)
 		defer ticker.Stop()
