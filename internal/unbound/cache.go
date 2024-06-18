@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"sync"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 //nolint:gochecknoglobals
@@ -43,11 +45,17 @@ func DumpCache(ctx context.Context, path string) error {
 		return err
 	}
 
+	var size uint64
+	stat, err := f.Stat()
+	if err == nil {
+		size = uint64(stat.Size())
+	}
+
 	if err := f.Close(); err != nil {
 		return err
 	}
 
-	slog.Info("Dumped cache", "took", time.Since(start))
+	slog.Info("Dumped cache", "took", time.Since(start), "size", humanize.IBytes(size))
 	return nil
 }
 
@@ -84,6 +92,12 @@ func LoadCache(ctx context.Context, path string) error {
 		return err
 	}
 
-	slog.Info("Loaded cache", "took", time.Since(start))
+	var size uint64
+	info, err := f.Stat()
+	if err == nil {
+		size = uint64(info.Size())
+	}
+
+	slog.Info("Loaded cache", "took", time.Since(start), "size", humanize.IBytes(size))
 	return nil
 }
