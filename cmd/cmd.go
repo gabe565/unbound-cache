@@ -48,6 +48,20 @@ func run(cmd *cobra.Command, _ []string) error {
 		return nil
 	})
 
+	var loaded bool
+	group.Go(func() error {
+		subCtx, subCancel := context.WithTimeout(ctx, 10*time.Minute)
+		defer subCancel()
+		if err := unbound.AwaitHealthy(subCtx); err != nil {
+			return err
+		}
+		if err := unbound.LoadCache(subCtx, conf.CachePath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+		loaded = true
+		return nil
+	})
+
 	group.Go(func() error {
 		defer cancel()
 		signalCtx, cancelSignal := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
@@ -57,22 +71,13 @@ func run(cmd *cobra.Command, _ []string) error {
 		case <-ctx.Done():
 			return nil
 		case <-signalCtx.Done():
-			subCtx, subCancel := context.WithTimeout(ctx, time.Minute)
-			defer subCancel()
-			return unbound.DumpCache(subCtx, conf.CachePath)
+			if loaded {
+				subCtx, subCancel := context.WithTimeout(ctx, time.Minute)
+				defer subCancel()
+				return unbound.DumpCache(subCtx, conf.CachePath)
+			}
+			return nil
 		}
-	})
-
-	group.Go(func() error {
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
-		defer cancel()
-		if err := unbound.AwaitHealthy(ctx); err != nil {
-			return err
-		}
-		if err := unbound.LoadCache(ctx, conf.CachePath); !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
-		return nil
 	})
 
 	group.Go(func() error {
@@ -83,11 +88,13 @@ func run(cmd *cobra.Command, _ []string) error {
 			case <-ctx.Done():
 				return nil
 			case <-ticker.C:
-				subCtx, subCancel := context.WithTimeout(ctx, time.Minute)
-				if err := unbound.DumpCache(subCtx, conf.CachePath); err != nil {
-					slog.Error("Failed to dump cache", "error", err.Error())
+				if loaded {
+					subCtx, subCancel := context.WithTimeout(ctx, time.Minute)
+					if err := unbound.DumpCache(subCtx, conf.CachePath); err != nil {
+						slog.Error("Failed to dump cache", "error", err.Error())
+					}
+					subCancel()
 				}
-				subCancel()
 			}
 		}
 	})
