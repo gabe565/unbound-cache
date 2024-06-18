@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -16,17 +17,15 @@ import (
 var dumpMu sync.RWMutex
 
 func DumpCache(ctx context.Context, path string) error {
-	dumpMu.Lock()
-	defer dumpMu.Unlock()
-
 	start := time.Now()
 
-	f, err := os.Create(path)
+	f, err := os.CreateTemp(filepath.Dir(path), ".cache-*.txt.gz")
 	if err != nil {
 		return err
 	}
 	defer func() {
 		_ = f.Close()
+		_ = os.Remove(f.Name())
 	}()
 
 	gzw := gzip.NewWriter(f)
@@ -52,6 +51,13 @@ func DumpCache(ctx context.Context, path string) error {
 	}
 
 	if err := f.Close(); err != nil {
+		return err
+	}
+
+	dumpMu.Lock()
+	defer dumpMu.Unlock()
+
+	if err := os.Rename(f.Name(), path); err != nil {
 		return err
 	}
 
