@@ -47,7 +47,7 @@ func DumpCache(ctx context.Context, path string) error {
 	var size uint64
 	stat, err := f.Stat()
 	if err == nil {
-		size = uint64(stat.Size())
+		size = uint64(stat.Size()) //nolint:gosec
 	}
 
 	if err := f.Close(); err != nil {
@@ -101,7 +101,7 @@ func LoadCache(ctx context.Context, path string) error {
 	var size uint64
 	info, err := f.Stat()
 	if err == nil {
-		size = uint64(info.Size())
+		size = uint64(info.Size()) //nolint:gosec
 	}
 
 	slog.Info("Loaded cache", "took", time.Since(start), "size", humanize.IBytes(size))
