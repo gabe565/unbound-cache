@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dustin/go-humanize"
+	"github.com/labstack/gommon/bytes"
 )
 
 //nolint:gochecknoglobals
@@ -44,10 +44,10 @@ func DumpCache(ctx context.Context, path string) error {
 		return err
 	}
 
-	var size uint64
+	var size int64
 	stat, err := f.Stat()
 	if err == nil {
-		size = uint64(stat.Size()) //nolint:gosec
+		size = stat.Size()
 	}
 
 	if err := f.Close(); err != nil {
@@ -61,7 +61,7 @@ func DumpCache(ctx context.Context, path string) error {
 		return err
 	}
 
-	slog.Info("Dumped cache", "took", time.Since(start), "size", humanize.IBytes(size))
+	slog.Info("Dumped cache", "took", time.Since(start), "size", bytes.Format(size))
 	return nil
 }
 
@@ -98,12 +98,12 @@ func LoadCache(ctx context.Context, path string) error {
 		return err
 	}
 
-	var size uint64
+	var size int64
 	info, err := f.Stat()
 	if err == nil {
-		size = uint64(info.Size()) //nolint:gosec
+		size = info.Size()
 	}
 
-	slog.Info("Loaded cache", "took", time.Since(start), "size", humanize.IBytes(size))
+	slog.Info("Loaded cache", "took", time.Since(start), "size", bytes.Format(size))
 	return nil
 }
