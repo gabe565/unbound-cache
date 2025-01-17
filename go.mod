@@ -1,6 +1,6 @@
 module github.com/gabe565/unbound-cache
 
-go 1.23.2
+go 1.23.5
 
 require (
 	github.com/labstack/gommon v0.4.2
