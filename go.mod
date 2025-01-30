@@ -1,6 +1,6 @@
 module github.com/gabe565/unbound-cache
 
-go 1.23.2
+go 1.23.5
 
 require (
 	gabe565.com/utils v0.0.0-20250130072635-ed882da6fcdd
