@@ -23,6 +23,6 @@ RUN --mount=type=cache,target=/root/.cache <<EOT
 EOT
 
 
-FROM mvance/unbound:1.22.0
+FROM mvance/unbound:1.22.0@sha256:76906da36d1806f3387338f15dcf8b357c51ce6897fb6450d6ce010460927e90
 COPY --from=build /app/unbound-cache /usr/bin
 CMD ["unbound-cache"]
