@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/labstack/gommon/bytes"
+	"gabe565.com/utils/bytefmt"
 )
 
 //nolint:gochecknoglobals
@@ -61,7 +61,7 @@ func DumpCache(ctx context.Context, path string) error {
 		return err
 	}
 
-	slog.Info("Dumped cache", "took", time.Since(start), "size", bytes.Format(size))
+	slog.Info("Dumped cache", "took", time.Since(start), "size", bytefmt.Encode(size))
 	return nil
 }
 
@@ -104,6 +104,6 @@ func LoadCache(ctx context.Context, path string) error {
 		size = info.Size()
 	}
 
-	slog.Info("Loaded cache", "took", time.Since(start), "size", bytes.Format(size))
+	slog.Info("Loaded cache", "took", time.Since(start), "size", bytefmt.Encode(size))
 	return nil
 }
